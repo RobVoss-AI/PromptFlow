@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#060e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PromptFlow">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="VAIC PromptFlow">
+<meta name="msapplication-TileColor" content="#060e1a">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAIC PromptFlow — AI-Powered Teleprompter</title>
+    <style>
+        /* ============================================================
+           VAIC PROMPTFLOW — GLOBAL STYLES & THEME
+           Blue & Gold branding for Voss AI Consulting
+           ============================================================ */
+        :root {
+            --bg-deepest: #060e1a;
+            --bg-dark: #0a1628;
+            --bg-panel: #0f1f36;
+            --bg-card: #142742;
+            --bg-input: #0d1a2e;
+            --bg-hover: #1a3050;
+            --blue-primary: #1e3a5f;
+            --blue-mid: #2d5f8a;
+            --blue-light: #4a90d9;
+            --blue-bright: #5ba3ec;
+            --gold-primary: #c9a227;
+            --gold-light: #e8c84a;
+            --gold-dark: #9a7b1c;
+            --gold-glow: rgba(201, 162, 39, 0.3);
+            --text-primary: #e8ecf1;
+            --text-secondary: #8899aa;
+            --text-muted: #556677;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --border: rgba(45, 95, 138, 0.3);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+            --transition: 0.2s ease;
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-deepest);
+            color: var(--text-primary);
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--blue-primary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--blue-mid); }
+
+        /* ============================================================
+           SPLASH SCREEN
+           ============================================================ */
+        #splash {
+            position: fixed; inset: 0; z-index: 9999;
+            background: radial-gradient(ellipse at center, #0f1f36 0%, #060e1a 70%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #splash .logo-mark {
+            width: 80px; height: 80px; border-radius: 20px;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; font-weight: 800; color: var(--bg-deepest);
+            margin-bottom: 20px; box-shadow: 0 0 60px var(--gold-glow);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 40px var(--gold-glow); }
+            50% { box-shadow: 0 0 80px var(--gold-glow), 0 0 120px rgba(201,162,39,0.1); }
+        }
+        #splash h1 { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: 1px; }
+        #splash h1 span { color: var(--gold-primary); }
+        #splash p { color: var(--text-secondary); margin-top: 8px; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; }
+        #splash .splash-loader {
+            margin-top: 40px; width: 200px; height: 3px;
+            background: var(--bg-card); border-radius: 3px; overflow: hidden;
+        }
+        #splash .splash-loader-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--gold-primary), var(--gold-light));
+            border-radius: 3px; transition: width 0.3s ease;
+        }
+
+        /* ============================================================
+           APP SHELL
+           ============================================================ */
+        #app { display: flex; height: 100vh; opacity: 0; transition: opacity 0.4s ease; }
+        #app.visible { opacity: 1; }
+
+        /* Sidebar */
+        #sidebar {
+            width: 220px; min-width: 220px;
+            background: var(--bg-dark);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            z-index: 100;
+        }
+        .sidebar-brand {
+            padding: 20px 16px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .sidebar-brand .logo-sm {
+            width: 36px; height: 36px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 800; color: var(--bg-deepest);
+            flex-shrink: 0;
+        }
+        .sidebar-brand .brand-text { font-size: 15px; font-weight: 700; line-height: 1.2; }
+        .sidebar-brand .brand-text span { color: var(--gold-primary); }
+        .sidebar-brand .brand-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+        .sidebar-nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 4px; }
+        .nav-btn {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: var(--radius);
+            background: transparent; border: none; color: var(--text-secondary);
+            font-size: 14px; cursor: pointer; transition: all var(--transition);
+            text-align: left; width: 100%; font-family: var(--font-main);
+        }
+        .nav-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .nav-btn.active { background: var(--blue-primary); color: var(--gold-light); font-weight: 600; }
+        .nav-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .sidebar-footer {
+            padding: 16px; border-top: 1px solid var(--border);
+            font-size: 11px; color: var(--text-muted); text-align: center;
+        }
+        .sidebar-footer a { color: var(--gold-primary); text-decoration: none; }
+
+        /* Main content */
+        #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+        /* Pages */
+        .page { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+        .page.active { display: flex; }
+
+        /* ============================================================
+           SHARED UI COMPONENTS
+           ============================================================ */
+        .btn {
+            padding: 8px 16px; border-radius: var(--radius); border: none;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            font-family: var(--font-main); transition: all var(--transition);
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-gold { background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark)); color: var(--bg-deepest); }
+        .btn-gold:hover { background: linear-gradient(135deg, var(--gold-light), var(--gold-primary)); }
+        .btn-blue { background: var(--blue-mid); color: white; }
+        .btn-blue:hover { background: var(--blue-light); }
+        .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-lg { padding: 12px 24px; font-size: 15px; }
+
+        .input, .textarea, select {
+            background: var(--bg-input); border: 1px solid var(--border);
+            color: var(--text-primary); border-radius: var(--radius);
+            padding: 8px 12px; font-size: 14px; font-family: var(--font-main);
+            transition: border-color var(--transition); outline: none; width: 100%;
+        }
+        .input:focus, .textarea:focus, select:focus { border-color: var(--gold-primary); }
+        .textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 20px;
+        }
+        .page-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            flex-shrink: 0;
+        }
+        .page-header h2 { font-size: 20px; font-weight: 700; }
+        .page-header h2 svg { vertical-align: -3px; margin-right: 8px; }
+        .page-body { flex: 1; overflow-y: auto; padding: 24px; }
+
+        /* Range slider custom */
+        input[type="range"] {
+            -webkit-appearance: none; background: transparent; width: 100%;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px; background: var(--bg-input); border-radius: 3px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px;
+            border-radius: 50%; background: var(--gold-primary); cursor: pointer;
+            margin-top: -6px; box-shadow: 0 0 8px var(--gold-glow);
+        }
+
+        /* Checkbox custom */
+        .toggle-switch {
+            position: relative; display: inline-block; width: 40px; height: 22px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; inset: 0; background: var(--bg-input); border-radius: 22px;
+            border: 1px solid var(--border); cursor: pointer; transition: var(--transition);
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute; width: 16px; height: 16px;
+            left: 2px; bottom: 2px; background: var(--text-secondary);
+            border-radius: 50%; transition: var(--transition);
+        }
+        .toggle-switch input:checked + .toggle-slider { background: var(--gold-primary); border-color: var(--gold-primary); }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--bg-deepest); }
+
+        /* ============================================================
+           SCRIPTS PAGE
+           ============================================================ */
+        #page-scripts .page-body { display: flex; gap: 24px; }
+        .scripts-library {
+            width: 280px; min-width: 280px; display: flex; flex-direction: column; gap: 12px;
+        }
+        .library-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+        .library-header h3 { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .script-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex: 1; }
+        .script-item {
+            padding: 12px; border-radius: var(--radius); background: var(--bg-panel);
+            border: 1px solid transparent; cursor: pointer; transition: all var(--transition);
+        }
+        .script-item:hover { border-color: var(--border); background: var(--bg-hover); }
+        .script-item.active { border-color: var(--gold-primary); background: var(--bg-card); }
+        .script-item h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .script-item .meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 10px; }
+
+        .script-editor { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+        .editor-toolbar {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .editor-toolbar .spacer { flex: 1; }
+        .editor-stats {
+            display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary);
+        }
+        .editor-stats span { display: flex; align-items: center; gap: 4px; }
+        .editor-stats .stat-val { color: var(--gold-light); font-weight: 600; }
+        #script-title {
+            font-size: 18px; font-weight: 700; background: transparent;
+            border: none; border-bottom: 2px solid var(--border); color: var(--text-primary);
+            padding: 8px 0; outline: none; width: 100%; font-family: var(--font-main);
+        }
+        #script-title:focus { border-color: var(--gold-primary); }
+        #script-content {
+            flex: 1; min-height: 300px; font-size: 15px; line-height: 1.8;
+            background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px; color: var(--text-primary);
+            font-family: var(--font-main); resize: none; outline: none;
+        }
+        #script-content:focus { border-color: var(--gold-primary); }
+        .section-hint {
+            font-size: 12px; color: var(--text-muted); padding: 8px 12px;
+            background: var(--bg-panel); border-radius: var(--radius);
+            border-left: 3px solid var(--gold-primary);
+        }
+
+        /* ============================================================
+           PROMPTER PAGE
+           ============================================================ */
+        #page-prompter { position: relative; }
+        .prompter-toolbar {
+            padding: 12px 20px; background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex-shrink: 0;
+            z-index: 50;
+        }
+        .prompter-toolbar .toolbar-group {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .prompter-toolbar .toolbar-divider {
+            width: 1px; height: 28px; background: var(--border); margin: 0 4px;
+        }
+        .prompter-toolbar label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+        .prompter-toolbar .speed-display {
+            min-width: 32px; text-align: center; font-size: 13px;
+            font-weight: 600; color: var(--gold-light); font-variant-numeric: tabular-nums;
+        }
+        .prompter-toolbar input[type="range"] { width: 120px; }
+        .prompter-toolbar input[type="number"] {
+            width: 60px; padding: 4px 8px; font-size: 13px; text-align: center;
+            background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius);
+            color: var(--text-primary); outline: none;
+        }
+        .prompter-toolbar .toolbar-spacer { flex: 1; }
+
+        /* Live info bar */
+        .prompter-info-bar {
+            padding: 6px 20px; background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 20px;
+            font-size: 12px; color: var(--text-secondary); flex-shrink: 0;
+        }
+        .prompter-info-bar .info-item { display: flex; align-items: center; gap: 5px; }
+        .prompter-info-bar .info-val { color: var(--gold-light); font-weight: 600; font-variant-numeric: tabular-nums; }
+        .voice-indicator {
+            display: flex; align-items: center; gap: 5px;
+        }
+        .voice-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);
+            transition: background 0.3s;
+        }
+        .voice-dot.active { background: var(--success); animation: voice-pulse 1s infinite; }
+        @keyframes voice-pulse {
+            0%, 100% { opacity: 1; } 50% { opacity: 0.5; }
+        }
+        .deviation-badge {
+            padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+            background: var(--success); color: var(--bg-deepest); transition: all 0.3s;
+        }
+        .deviation-badge.warning { background: var(--gold-primary); }
+        .deviation-badge.off-script { background: var(--danger); color: white; }
+
+        /* Prompter display */
+        .prompter-viewport {
+            flex: 1; position: relative; overflow: hidden;
+            background: var(--bg-deepest);
+        }
+
+        /* Focus line */
+        .focus-line {
+            position: absolute; left: 0; right: 0; height: 70px;
+            top: 35%; transform: translateY(-50%);
+            background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(201, 162, 39, 0.06) 20%,
+                rgba(201, 162, 39, 0.12) 45%,
+                rgba(201, 162, 39, 0.12) 55%,
+                rgba(201, 162, 39, 0.06) 80%,
+                transparent 100%
+            );
+            border-top: 1px solid rgba(201, 162, 39, 0.15);
+            border-bottom: 1px solid rgba(201, 162, 39, 0.15);
+            pointer-events: none; z-index: 10;
+        }
+
+        /* Gradient fades top/bottom */
+        .prompter-viewport::before, .prompter-viewport::after {
+            content: ''; position: absolute; left: 0; right: 0; height: 25%; z-index: 5; pointer-events: none;
+        }
+        .prompter-viewport::before {
+            top: 0; background: linear-gradient(to bottom, var(--bg-deepest) 0%, transparent 100%);
+        }
+        .prompter-viewport::after {
+            bottom: 0; background: linear-gradient(to top, var(--bg-deepest) 0%, transparent 100%);
+        }
+
+        .prompter-text-wrapper {
+            position: absolute; left: 50%; width: 70%; max-width: 900px;
+            transform: translateX(-50%);
+            padding-top: 50vh; padding-bottom: 50vh;
+        }
+        .prompter-text-wrapper.mirror { transform: translateX(-50%) scaleX(-1); }
+
+        .prompter-line {
+            font-size: 48px; line-height: 1.8; text-align: center;
+            color: var(--text-primary); transition: opacity 0.2s;
+            padding: 2px 0;
+        }
+        .prompter-line.section-marker {
+            color: var(--gold-primary); font-size: 20px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 3px; padding: 20px 0;
+            border-top: 1px solid rgba(201,162,39,0.2); margin-top: 20px;
+        }
+        .prompter-placeholder {
+            text-align: center; color: var(--text-muted); font-size: 20px;
+            padding-top: 30vh;
+        }
+
+        /* Progress bar */
+        .prompter-progress {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+            background: var(--bg-panel); z-index: 20;
+        }
+        .prompter-progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--gold-primary), var(--gold-light));
+            transition: width 0.3s ease;
+        }
+
+        /* Countdown overlay */
+        .countdown-overlay {
+            position: absolute; inset: 0; z-index: 100;
+            background: rgba(6, 14, 26, 0.95);
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .countdown-overlay.active { display: flex; }
+        .countdown-number {
+            font-size: 160px; font-weight: 800;
+            color: var(--gold-primary); line-height: 1;
+            text-shadow: 0 0 60px var(--gold-glow);
+            animation: countdown-pop 0.5s ease;
+        }
+        @keyframes countdown-pop {
+            0% { transform: scale(1.5); opacity: 0; }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .countdown-label {
+            font-size: 18px; color: var(--text-secondary); margin-top: 16px;
+            text-transform: uppercase; letter-spacing: 3px;
+        }
+
+        /* Section jump panel */
+        .section-jump-panel {
+            position: absolute; top: 12px; right: 12px; z-index: 30;
+            background: rgba(15, 31, 54, 0.95); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 8px; max-height: 300px;
+            overflow-y: auto; min-width: 200px;
+            display: none; backdrop-filter: blur(10px);
+        }
+        .section-jump-panel.visible { display: block; }
+        .section-jump-item {
+            padding: 8px 12px; border-radius: var(--radius); cursor: pointer;
+            font-size: 13px; color: var(--text-secondary); transition: all var(--transition);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .section-jump-item:hover { background: var(--bg-hover); color: var(--gold-light); }
+        .section-jump-item.current { color: var(--gold-primary); font-weight: 600; }
+
+        /* ============================================================
+           ANALYTICS PAGE
+           ============================================================ */
+        .analytics-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 20px; text-align: center;
+        }
+        .stat-card .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-card .stat-value { font-size: 36px; font-weight: 800; color: var(--gold-light); }
+        .stat-card .stat-unit { font-size: 14px; color: var(--text-secondary); }
+
+        .chart-container {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px;
+        }
+        .chart-container h3 { font-size: 16px; margin-bottom: 16px; color: var(--text-primary); }
+        .chart-container canvas { width: 100%; height: 200px; }
+
+        .coaching-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px;
+        }
+        .coaching-card h3 { font-size: 16px; margin-bottom: 16px; color: var(--gold-light); }
+        .coaching-tip {
+            padding: 12px 16px; background: var(--bg-panel); border-radius: var(--radius);
+            margin-bottom: 8px; font-size: 14px; line-height: 1.5; color: var(--text-secondary);
+            border-left: 3px solid var(--gold-primary);
+        }
+        .no-data-msg {
+            text-align: center; color: var(--text-muted); padding: 60px 20px; font-size: 15px;
+        }
+
+        /* ============================================================
+           SETTINGS PAGE
+           ============================================================ */
+        .settings-group { margin-bottom: 28px; }
+        .settings-group h3 {
+            font-size: 14px; font-weight: 600; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+            padding-bottom: 8px; border-bottom: 1px solid var(--border);
+        }
+        .setting-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0; gap: 16px;
+        }
+        .setting-row label { font-size: 14px; color: var(--text-primary); }
+        .setting-row .setting-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        /* ============================================================
+           PROMPTER FULLSCREEN MODE (hides sidebar)
+           ============================================================ */
+        body.prompter-fullscreen #sidebar { display: none; }
+        body.prompter-fullscreen .prompter-toolbar { display: none; }
+        body.prompter-fullscreen .prompter-info-bar { display: none; }
+
+        /* ============================================================
+           KEYBOARD SHORTCUTS OVERLAY
+           ============================================================ */
+        .shortcuts-overlay {
+            position: fixed; inset: 0; z-index: 9000;
+            background: rgba(6,14,26,0.85); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+        }
+        .shortcuts-overlay.visible { display: flex; }
+        .shortcuts-panel {
+            background: var(--bg-panel); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 32px; max-width: 520px; width: 90%;
+        }
+        .shortcuts-panel h3 { font-size: 18px; margin-bottom: 20px; color: var(--gold-light); }
+        .shortcut-row {
+            display: flex; justify-content: space-between; padding: 8px 0;
+            border-bottom: 1px solid rgba(45,95,138,0.15);
+        }
+        .shortcut-row:last-child { border-bottom: none; }
+        .shortcut-key {
+            padding: 3px 8px; background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 4px; font-size: 12px; font-family: var(--font-mono);
+            color: var(--gold-light);
+        }
+
+        /* ============================================================
+           RESPONSIVE / MOBILE
+           ============================================================ */
+        @media (max-width: 768px) {
+            #sidebar { width: 60px; min-width: 60px; }
+            .sidebar-brand .brand-text, .sidebar-brand .brand-sub, .nav-btn span { display: none; }
+            .sidebar-brand { justify-content: center; padding: 16px 8px; }
+            .nav-btn { justify-content: center; padding: 12px; }
+            .sidebar-footer { display: none; }
+            #page-scripts .page-body { flex-direction: column; }
+            .scripts-library { width: 100%; min-width: unset; max-height: 200px; }
+        }
+        /* ============================================================
+           DRAG & DROP ZONE
+           ============================================================ */
+        .drop-zone-wrapper {
+            position: relative; flex: 1; display: flex; flex-direction: column;
+        }
+        .drop-zone-overlay {
+            position: absolute; inset: 0; z-index: 10;
+            background: rgba(30, 58, 95, 0.9);
+            border: 3px dashed var(--gold-primary);
+            border-radius: var(--radius-lg);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 12px;
+            backdrop-filter: blur(4px);
+        }
+        .drop-zone-wrapper.drag-over .drop-zone-overlay { display: flex; }
+        .drop-zone-overlay svg { width: 48px; height: 48px; color: var(--gold-light); }
+        .drop-zone-overlay .drop-title {
+            font-size: 18px; font-weight: 700; color: var(--gold-light);
+        }
+        .drop-zone-overlay .drop-formats {
+            font-size: 12px; color: var(--text-secondary);
+        }
+        .format-badge {
+            display: inline-block; padding: 3px 8px; border-radius: 4px;
+            font-size: 11px; font-weight: 600; color: var(--gold-light);
+            background: rgba(201, 162, 39, 0.15); border: 1px solid rgba(201, 162, 39, 0.3);
+            margin-left: 8px; vertical-align: middle;
+        }
+        .import-info {
+            font-size: 12px; color: var(--text-muted); padding: 8px 12px;
+            background: var(--bg-panel); border-radius: var(--radius);
+            border-left: 3px solid var(--blue-mid);
+            margin-top: -4px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<!-- ============================================================
+     SPLASH SCREEN
+     ============================================================ -->
+<div id="splash">
+    <div class="logo-mark">V</div>
+    <h1>VAIC <span>PromptFlow</span></h1>
+    <p>Voss AI Consulting</p>
+    <div class="splash-loader"><div class="splash-loader-bar" id="splash-bar"></div></div>
+</div>
+
+<!-- ============================================================
+     KEYBOARD SHORTCUTS OVERLAY
+     ============================================================ -->
+<div class="shortcuts-overlay" id="shortcuts-overlay">
+    <div class="shortcuts-panel">
+        <h3>Keyboard Shortcuts</h3>
+        <div class="shortcut-row"><span>Play / Pause</span><span class="shortcut-key">Space</span></div>
+        <div class="shortcut-row"><span>Reset to top</span><span class="shortcut-key">R</span></div>
+        <div class="shortcut-row"><span>Speed up</span><span class="shortcut-key">&#x2191;</span></div>
+        <div class="shortcut-row"><span>Slow down</span><span class="shortcut-key">&#x2193;</span></div>
+        <div class="shortcut-row"><span>Font size up</span><span class="shortcut-key">+</span></div>
+        <div class="shortcut-row"><span>Font size down</span><span class="shortcut-key">-</span></div>
+        <div class="shortcut-row"><span>Toggle mirror</span><span class="shortcut-key">M</span></div>
+        <div class="shortcut-row"><span>Toggle fullscreen</span><span class="shortcut-key">F</span></div>
+        <div class="shortcut-row"><span>Toggle voice tracking</span><span class="shortcut-key">V</span></div>
+        <div class="shortcut-row"><span>Toggle sections panel</span><span class="shortcut-key">S</span></div>
+        <div class="shortcut-row"><span>Start with countdown</span><span class="shortcut-key">C</span></div>
+        <div class="shortcut-row"><span>Toggle recording</span><span class="shortcut-key">Ctrl+R</span></div>
+        <div class="shortcut-row"><span>Show/hide shortcuts</span><span class="shortcut-key">?</span></div>
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-ghost" onclick="document.getElementById('shortcuts-overlay').classList.remove('visible')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP
+     ============================================================ -->
+<div id="app">
+    <!-- Sidebar -->
+    <nav id="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo-sm">V</div>
+            <div>
+                <div class="brand-text">Prompt<span>Flow</span></div>
+                <div class="brand-sub">Voss AI Consulting</div>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <button class="nav-btn active" data-page="scripts" title="Scripts">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span>Scripts</span>
+            </button>
+            <button class="nav-btn" data-page="prompter" title="Prompter">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                <span>Prompter</span>
+            </button>
+            <button class="nav-btn" data-page="analytics" title="Analytics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Analytics</span>
+            </button>
+            <button class="nav-btn" data-page="settings" title="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>Settings</span>
+            </button>
+        </div>
+        <div class="sidebar-footer">
+            Powered by<br><a href="https://www.vossaiconsulting.com" target="_blank">Voss AI Consulting</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="main">
+
+        <!-- ==================== SCRIPTS PAGE ==================== -->
+        <div class="page active" id="page-scripts">
+            <div class="page-header">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Script Editor
+                </h2>
+                <div style="display:flex;gap:8px;">
+                    <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+                        Upload File <input type="file" id="file-upload" accept=".txt,.md,.rtf,.docx,.doc,.html,.htm" style="display:none;">
+                    </label>
+                    <button class="btn btn-gold btn-sm" id="btn-load-prompter">Load into Prompter</button>
+                </div>
+            </div>
+            <div class="page-body">
+                <div class="scripts-library">
+                    <div class="library-header">
+                        <h3>Library</h3>
+                        <button class="btn btn-ghost btn-sm" id="btn-new-script">+ New</button>
+                    </div>
+                    <div class="script-list" id="script-list">
+                        <div style="color:var(--text-muted); font-size:13px; padding:12px;">No saved scripts yet.</div>
+                    </div>
+                </div>
+                <div class="script-editor">
+                    <input type="text" id="script-title" placeholder="Script title..." value="Untitled Script">
+                    <div class="section-hint">
+                        Tip: Use <strong>## Section Name</strong> on a new line to create section markers. Sections appear as jump points in the prompter.
+                    </div>
+                    <div class="import-info">
+                        Drop or upload <strong>.docx</strong> / <strong>.txt</strong> / <strong>.md</strong> files — or drag text straight from <strong>Google Docs</strong>. Headings are auto-detected as sections.
+                    </div>
+                    <div class="editor-toolbar">
+                        <div class="editor-stats">
+                            <span>Words: <span class="stat-val" id="stat-words">0</span></span>
+                            <span>Est. time: <span class="stat-val" id="stat-time">0:00</span></span>
+                            <span>Sections: <span class="stat-val" id="stat-sections">0</span></span>
+                            <span id="format-indicator"></span>
+                        </div>
+                        <div class="spacer"></div>
+                        <button class="btn btn-ghost btn-sm" id="btn-auto-sections" title="Detect headings and convert to sections">Auto-Sections</button>
+                        <button class="btn btn-blue btn-sm" id="btn-save-script">Save to Library</button>
+                        <button class="btn btn-ghost btn-sm" id="btn-delete-script">Delete</button>
+                    </div>
+                    <div class="drop-zone-wrapper" id="drop-zone">
+                        <textarea id="script-content" placeholder="Paste or type your script here — or drag a .docx / Google Doc onto this area.
+
+Headings in Word docs (Heading 1, Heading 2, etc.) become section markers automatically.
+
+Use ## Section Name to mark sections manually.
+
+Example:
+## Introduction
+Welcome to this presentation...
+
+## Key Points
+The first thing to note is...
+
+## Conclusion
+In summary..."></textarea>
+                        <div class="drop-zone-overlay" id="drop-overlay">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <div class="drop-title">Drop your document here</div>
+                            <div class="drop-formats">.docx &middot; .txt &middot; .md &middot; .html &middot; Google Docs content</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PROMPTER PAGE ==================== -->
+        <div class="page" id="page-prompter">
+            <div class="prompter-toolbar" id="prompter-toolbar">
+                <div class="toolbar-group">
+                    <button class="btn btn-gold btn-sm" id="btn-countdown-start" title="Start with countdown (C)">Countdown</button>
+                    <button class="btn btn-blue btn-sm" id="btn-play-pause" title="Play/Pause (Space)">Play</button>
+                    <button class="btn btn-ghost btn-sm" id="btn-reset" title="Reset (R)">Reset</button>
+                </div>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-group">
+                    <label>Speed</label>
+                    <input type="range" id="ctrl-speed" min="1" max="100" value="30">
+                    <span class="speed-display" id="speed-display">30</span>
+                </div>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-group">
+                    <label>Font</label>
+                    <input type="number" id="ctrl-fontsize" min="20" max="120" value="48" style="width:55px;">
+                </div>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-group">
+                    <label>Mirror</label>
+                    <label class="toggle-switch"><input type="checkbox" id="ctrl-mirror"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toolbar-group">
+                    <label>Voice Track</label>
+                    <label class="toggle-switch"><input type="checkbox" id="ctrl-voice"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="toolbar-divider"></div>
+                <div class="toolbar-group">
+                    <button class="btn btn-ghost btn-sm" id="btn-sections-toggle" title="Sections (S)">Sections</button>
+                    <button class="btn btn-ghost btn-sm" id="btn-record" title="Record (Ctrl+R)">Record</button>
+                </div>
+                <div class="toolbar-spacer"></div>
+                <div class="toolbar-group">
+                    <button class="btn btn-ghost btn-sm" id="btn-fullscreen" title="Fullscreen (F)">Fullscreen</button>
+                    <button class="btn btn-ghost btn-sm" id="btn-shortcuts" title="Shortcuts (?)">?</button>
+                </div>
+            </div>
+
+            <div class="prompter-info-bar" id="prompter-info-bar">
+                <div class="info-item">
+                    <span>Elapsed</span>
+                    <span class="info-val" id="info-elapsed">0:00</span>
+                </div>
+                <div class="info-item">
+                    <span>Remaining</span>
+                    <span class="info-val" id="info-remaining">--:--</span>
+                </div>
+                <div class="info-item">
+                    <span>WPM</span>
+                    <span class="info-val" id="info-wpm">--</span>
+                </div>
+                <div class="info-item voice-indicator">
+                    <span class="voice-dot" id="voice-dot"></span>
+                    <span id="voice-status">Voice off</span>
+                </div>
+                <div class="info-item">
+                    <span class="deviation-badge" id="deviation-badge">On Script</span>
+                </div>
+                <div class="info-item" id="recording-indicator" style="display:none;">
+                    <span style="color:var(--danger);">&#9679;</span>
+                    <span style="color:var(--danger);font-weight:600;">REC</span>
+                    <span class="info-val" id="rec-time">0:00</span>
+                </div>
+            </div>
+
+            <div class="prompter-viewport" id="prompter-viewport">
+                <div class="focus-line" id="focus-line"></div>
+                <div class="prompter-text-wrapper" id="prompter-text-wrapper">
+                    <div class="prompter-placeholder">Load a script from the editor to begin</div>
+                </div>
+                <div class="prompter-progress">
+                    <div class="prompter-progress-bar" id="progress-bar"></div>
+                </div>
+                <div class="countdown-overlay" id="countdown-overlay">
+                    <div class="countdown-number" id="countdown-number">3</div>
+                    <div class="countdown-label">Get Ready</div>
+                </div>
+                <div class="section-jump-panel" id="section-jump-panel"></div>
+            </div>
+        </div>
+
+        <!-- ==================== ANALYTICS PAGE ==================== -->
+        <div class="page" id="page-analytics">
+            <div class="page-header">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Session Analytics
+                </h2>
+                <button class="btn btn-ghost btn-sm" id="btn-export-report">Export Report</button>
+            </div>
+            <div class="page-body" id="analytics-body">
+                <div class="no-data-msg" id="no-analytics">
+                    Complete a prompter session to see your analytics here.<br>
+                    <span style="color:var(--text-muted);font-size:13px;">WPM tracking, pace analysis, and coaching tips will appear after your first session.</span>
+                </div>
+                <div id="analytics-content" style="display:none;">
+                    <div class="analytics-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Duration</div>
+                            <div class="stat-value" id="a-duration">--</div>
+                            <div class="stat-unit">minutes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Avg WPM</div>
+                            <div class="stat-value" id="a-wpm">--</div>
+                            <div class="stat-unit">words/min</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Words Read</div>
+                            <div class="stat-value" id="a-words">--</div>
+                            <div class="stat-unit">total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Deviations</div>
+                            <div class="stat-value" id="a-deviations">--</div>
+                            <div class="stat-unit">off-script</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Speaking Pace Over Time</h3>
+                        <canvas id="wpm-chart" height="200"></canvas>
+                    </div>
+                    <div class="coaching-card">
+                        <h3>Coaching Insights</h3>
+                        <div id="coaching-tips"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SETTINGS PAGE ==================== -->
+        <div class="page" id="page-settings">
+            <div class="page-header">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Settings
+                </h2>
+            </div>
+            <div class="page-body">
+                <div class="settings-group">
+                    <h3>Prompter Defaults</h3>
+                    <div class="setting-row">
+                        <div>
+                            <label>Default scroll speed</label>
+                            <div class="setting-desc">1 (slowest) to 100 (fastest)</div>
+                        </div>
+                        <input type="number" class="input" style="width:80px;" id="set-default-speed" min="1" max="100" value="30">
+                    </div>
+                    <div class="setting-row">
+                        <div>
+                            <label>Default font size</label>
+                            <div class="setting-desc">Size in pixels (20–120)</div>
+                        </div>
+                        <input type="number" class="input" style="width:80px;" id="set-default-fontsize" min="20" max="120" value="48">
+                    </div>
+                    <div class="setting-row">
+                        <div>
+                            <label>Countdown duration</label>
+                            <div class="setting-desc">Seconds before scroll starts</div>
+                        </div>
+                        <input type="number" class="input" style="width:80px;" id="set-countdown" min="1" max="10" value="3">
+                    </div>
+                    <div class="setting-row">
+                        <div>
+                            <label>Target WPM</label>
+                            <div class="setting-desc">Your ideal speaking pace for coaching</div>
+                        </div>
+                        <input type="number" class="input" style="width:80px;" id="set-target-wpm" min="80" max="250" value="150">
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>Voice Tracking</h3>
+                    <div class="setting-row">
+                        <div>
+                            <label>Auto-enable voice tracking</label>
+                            <div class="setting-desc">Automatically start voice tracking when playing</div>
+                        </div>
+                        <label class="toggle-switch"><input type="checkbox" id="set-auto-voice"><span class="toggle-slider"></span></label>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>Display</h3>
+                    <div class="setting-row">
+                        <div>
+                            <label>Show focus line</label>
+                            <div class="setting-desc">Highlight bar on the current reading line</div>
+                        </div>
+                        <label class="toggle-switch"><input type="checkbox" id="set-focus-line" checked><span class="toggle-slider"></span></label>
+                    </div>
+                    <div class="setting-row">
+                        <div>
+                            <label>Show progress bar</label>
+                            <div class="setting-desc">Progress indicator at the bottom</div>
+                        </div>
+                        <label class="toggle-switch"><input type="checkbox" id="set-progress-bar" checked><span class="toggle-slider"></span></label>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>Data</h3>
+                    <div class="setting-row">
+                        <div>
+                            <label>Clear all saved scripts</label>
+                            <div class="setting-desc">This cannot be undone</div>
+                        </div>
+                        <button class="btn btn-danger btn-sm" id="btn-clear-library">Clear Library</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+/* ================================================================
+   VAIC PROMPTFLOW — APPLICATION LOGIC
+   ================================================================ */
+
+// ── STATE ──────────────────────────────────────────────────────
+const state = {
+    // Script
+    currentScriptId: null,
+    scripts: [],
+    prompterLines: [],
+    prompterSections: [],
+    rawText: '',
+
+    // Prompter
+    isPlaying: false,
+    scrollY: 0,
+    fontSize: 48,
+    speed: 30,
+    mirror: false,
+    focusLineEnabled: true,
+
+    // Voice
+    voiceEnabled: false,
+    voiceRecognition: null,
+    voiceTranscript: '',
+    lastMatchIndex: 0,
+    deviationCount: 0,
+
+    // Session tracking
+    sessionActive: false,
+    sessionStartTime: null,
+    sessionElapsed: 0,
+    wpmSamples: [],
+    wordsSpoken: 0,
+
+    // Recording
+    isRecording: false,
+    mediaRecorder: null,
+    audioChunks: [],
+    recStartTime: null,
+
+    // Animation
+    animFrameId: null,
+    lastTimestamp: null,
+
+    // Settings
+    countdownDuration: 3,
+    targetWpm: 150,
+    autoVoice: false,
+};
+
+// ── DATABASE (IndexedDB) ──────────────────────────────────────
+const DB_NAME = 'vaic_promptflow';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('scripts')) {
+                d.createObjectStore('scripts', { keyPath: 'id' });
+            }
+        };
+        req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+        req.onerror = (e) => reject(e);
+    });
+}
+
+async function dbGetAll() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('scripts', 'readonly');
+        const store = tx.objectStore('scripts');
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function dbPut(script) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('scripts', 'readwrite');
+        const store = tx.objectStore('scripts');
+        const req = store.put(script);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function dbDelete(id) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('scripts', 'readwrite');
+        const store = tx.objectStore('scripts');
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function dbClearAll() {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('scripts', 'readwrite');
+        const store = tx.objectStore('scripts');
+        const req = store.clear();
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+// ── DOM REFERENCES ────────────────────────────────────────────
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+// ── SPLASH SCREEN ─────────────────────────────────────────────
+function initSplash() {
+    const bar = $('#splash-bar');
+    let pct = 0;
+    const interval = setInterval(() => {
+        pct += Math.random() * 25 + 10;
+        if (pct > 100) pct = 100;
+        bar.style.width = pct + '%';
+        if (pct >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+                $('#splash').classList.add('hidden');
+                $('#app').classList.add('visible');
+            }, 400);
+        }
+    }, 200);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function initNav() {
+    $$('.nav-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const page = btn.dataset.page;
+            $$('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            $$('.page').forEach(p => p.classList.remove('active'));
+            $(`#page-${page}`).classList.add('active');
+            if (page === 'analytics') renderAnalytics();
+        });
+    });
+}
+
+function switchToPage(pageName) {
+    $$('.nav-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.page === pageName);
+    });
+    $$('.page').forEach(p => p.classList.remove('active'));
+    $(`#page-${pageName}`).classList.add('active');
+}
+
+// ── SCRIPT EDITOR ─────────────────────────────────────────────
+function initEditor() {
+    const content = $('#script-content');
+    const title = $('#script-title');
+
+    content.addEventListener('input', updateEditorStats);
+    title.addEventListener('input', updateEditorStats);
+
+    $('#btn-new-script').addEventListener('click', () => {
+        state.currentScriptId = null;
+        title.value = 'Untitled Script';
+        content.value = '';
+        updateEditorStats();
+        renderScriptList();
+    });
+
+    $('#btn-save-script').addEventListener('click', saveCurrentScript);
+    $('#btn-delete-script').addEventListener('click', deleteCurrentScript);
+
+    $('#file-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        await handleFileImport(file);
+    });
+
+    // Auto-sections button
+    $('#btn-auto-sections').addEventListener('click', () => {
+        const content = $('#script-content');
+        if (!content.value.trim()) return;
+        content.value = autoDetectSections(content.value);
+        updateEditorStats();
+        $('#format-indicator').innerHTML = '<span class="format-badge">Sections detected</span>';
+        setTimeout(() => { $('#format-indicator').innerHTML = ''; }, 3000);
+    });
+
+    $('#btn-load-prompter').addEventListener('click', () => {
+        loadIntoPrompter(content.value);
+        switchToPage('prompter');
+    });
+}
+
+function updateEditorStats() {
+    const text = $('#script-content').value;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const sections = (text.match(/^## .+/gm) || []).length;
+    const minutes = Math.floor(words / 150);
+    const seconds = Math.round((words / 150 - minutes) * 60);
+
+    $('#stat-words').textContent = words;
+    $('#stat-time').textContent = `${minutes}:${seconds.toString().padStart(2,'0')}`;
+    $('#stat-sections').textContent = sections;
+}
+
+async function saveCurrentScript() {
+    const title = $('#script-title').value || 'Untitled';
+    const content = $('#script-content').value;
+    const words = content.trim() ? content.trim().split(/\s+/).length : 0;
+
+    const script = {
+        id: state.currentScriptId || Date.now().toString(),
+        title,
+        content,
+        words,
+        updatedAt: Date.now()
+    };
+
+    await dbPut(script);
+    state.currentScriptId = script.id;
+    await loadScripts();
+    renderScriptList();
+}
+
+async function deleteCurrentScript() {
+    if (!state.currentScriptId) return;
+    if (!confirm('Delete this script?')) return;
+    await dbDelete(state.currentScriptId);
+    state.currentScriptId = null;
+    $('#script-title').value = 'Untitled Script';
+    $('#script-content').value = '';
+    updateEditorStats();
+    await loadScripts();
+    renderScriptList();
+}
+
+async function loadScripts() {
+    state.scripts = await dbGetAll();
+    state.scripts.sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+function renderScriptList() {
+    const list = $('#script-list');
+    if (state.scripts.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px;">No saved scripts yet.</div>';
+        return;
+    }
+    list.innerHTML = state.scripts.map(s => {
+        const d = new Date(s.updatedAt);
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return `<div class="script-item ${s.id === state.currentScriptId ? 'active' : ''}" data-id="${s.id}">
+            <h4>${escHtml(s.title)}</h4>
+            <div class="meta"><span>${s.words || 0} words</span><span>${dateStr}</span></div>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.script-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const script = state.scripts.find(s => s.id === item.dataset.id);
+            if (!script) return;
+            state.currentScriptId = script.id;
+            $('#script-title').value = script.title;
+            $('#script-content').value = script.content;
+            updateEditorStats();
+            renderScriptList();
+        });
+    });
+}
+
+function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+
+// ── DOCUMENT PARSING (DOCX, HTML, PLAIN TEXT) ─────────────────
+
+async function parseDocxFile(arrayBuffer) {
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    const docXmlFile = zip.file('word/document.xml');
+    if (!docXmlFile) throw new Error('Invalid .docx file');
+    const docXml = await docXmlFile.async('string');
+
+    const paragraphs = [];
+    const paraRegex = /<w:p[\s>][\s\S]*?<\/w:p>/g;
+    let match;
+
+    while ((match = paraRegex.exec(docXml)) !== null) {
+        const paraXml = match[0];
+
+        // Detect heading style
+        const styleMatch = paraXml.match(/<w:pStyle\s+w:val="([^"]+)"/);
+        const style = styleMatch ? styleMatch[1] : '';
+
+        // Detect bold run properties on all runs (for bold-only headings)
+        const hasBoldRun = /<w:rPr>[\s\S]*?<w:b[\s/>][\s\S]*?<\/w:rPr>/.test(paraXml);
+
+        // Extract text from runs
+        const textParts = [];
+        const textRegex = /<w:t[^>]*>([\s\S]*?)<\/w:t>/g;
+        let textMatch;
+        while ((textMatch = textRegex.exec(paraXml)) !== null) {
+            textParts.push(textMatch[1]);
+        }
+        const text = textParts.join('');
+
+        if (!text.trim()) {
+            paragraphs.push('');
+            continue;
+        }
+
+        // Convert headings to ## sections
+        const isHeading = /^(Heading|heading|Title|Subtitle|TOCHeading|ListHeading)/i.test(style);
+        const isTitleStyle = /^(Title|Subtitle)$/i.test(style);
+
+        if (isHeading || isTitleStyle) {
+            paragraphs.push(`## ${text.trim()}`);
+        } else {
+            paragraphs.push(text.trim());
+        }
+    }
+
+    // Clean up consecutive blank lines
+    return paragraphs.join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
+function parseHtmlContent(html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const lines = [];
+
+    function walk(node) {
+        for (const child of node.childNodes) {
+            if (child.nodeType === 3) { // text node
+                const text = child.textContent.trim();
+                if (text) lines.push(text);
+            } else if (child.nodeType === 1) { // element
+                const tag = child.tagName.toLowerCase();
+                const text = child.textContent.trim();
+                if (!text) continue;
+
+                if (/^h[1-6]$/.test(tag)) {
+                    lines.push(`## ${text}`);
+                } else if (['p', 'li'].includes(tag)) {
+                    lines.push(text);
+                } else if (['ul', 'ol', 'div', 'section', 'article', 'main', 'body'].includes(tag)) {
+                    walk(child);
+                } else if (tag === 'blockquote') {
+                    lines.push(text);
+                } else if (tag === 'br') {
+                    lines.push('');
+                } else if (['span', 'strong', 'em', 'b', 'i', 'a'].includes(tag)) {
+                    // inline elements — skip, handled by parent
+                } else {
+                    walk(child);
+                }
+            }
+        }
+    }
+
+    walk(doc.body);
+    return lines.join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
+function autoDetectSections(text) {
+    const lines = text.split('\n');
+    const result = [];
+
+    for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+
+        // Skip empty lines
+        if (!trimmed) { result.push(''); continue; }
+
+        // Already a section marker — keep it
+        if (trimmed.startsWith('## ')) { result.push(trimmed); continue; }
+
+        // Markdown headings: # Heading or ### Heading → ## Section
+        const mdMatch = trimmed.match(/^(#{1,6})\s+(.+)/);
+        if (mdMatch) {
+            result.push(`## ${mdMatch[2]}`);
+            continue;
+        }
+
+        // Underline-style headings: text followed by === or ---
+        if (i + 1 < lines.length) {
+            const nextTrimmed = lines[i + 1].trim();
+            if (/^={3,}$/.test(nextTrimmed) || /^-{3,}$/.test(nextTrimmed)) {
+                result.push(`## ${trimmed}`);
+                i++; // skip the underline
+                continue;
+            }
+        }
+
+        // ALL CAPS lines (likely headings) — 3+ chars, mostly uppercase, short
+        if (trimmed.length >= 3 && trimmed.length <= 80 &&
+            trimmed === trimmed.toUpperCase() &&
+            /[A-Z]/.test(trimmed) && !/[a-z]/.test(trimmed) &&
+            trimmed.split(/\s+/).length <= 10 &&
+            !/^[^A-Za-z]*$/.test(trimmed)) { // not all punctuation/numbers
+            // Title-case it
+            const titleCase = trimmed.split(/\s+/).map(w =>
+                w.charAt(0) + w.slice(1).toLowerCase()
+            ).join(' ');
+            result.push(`## ${titleCase}`);
+            continue;
+        }
+
+        // Numbered sections like "1. Introduction" or "Section 1: Overview"
+        const numberedMatch = trimmed.match(/^(?:Section\s+)?\d+[\.\):\-]\s+(.+)/i);
+        if (numberedMatch && trimmed.split(/\s+/).length <= 8) {
+            result.push(`## ${numberedMatch[1]}`);
+            continue;
+        }
+
+        result.push(trimmed);
+    }
+
+    return result.join('\n');
+}
+
+async function handleFileImport(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const content = $('#script-content');
+    const title = $('#script-title');
+
+    title.value = file.name.replace(/\.[^/.]+$/, '');
+    state.currentScriptId = null;
+
+    let formatLabel = '';
+
+    if (ext === 'docx') {
+        try {
+            const buffer = await file.arrayBuffer();
+            const text = await parseDocxFile(buffer);
+            content.value = text;
+            formatLabel = 'DOCX';
+        } catch (e) {
+            alert('Could not parse .docx file: ' + e.message);
+            return;
+        }
+    } else if (ext === 'html' || ext === 'htm') {
+        const html = await file.text();
+        content.value = parseHtmlContent(html);
+        formatLabel = 'HTML';
+    } else {
+        // Plain text / markdown
+        content.value = await file.text();
+        formatLabel = ext.toUpperCase();
+    }
+
+    // Show format badge
+    const indicator = $('#format-indicator');
+    indicator.innerHTML = formatLabel ? `<span class="format-badge">Imported: ${formatLabel}</span>` : '';
+
+    updateEditorStats();
+}
+
+// ── DRAG & DROP ───────────────────────────────────────────────
+
+function initDragDrop() {
+    const dropZone = $('#drop-zone');
+    let dragCounter = 0;
+
+    dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragCounter++;
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+            dragCounter = 0;
+            dropZone.classList.remove('drag-over');
+        }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+
+    dropZone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        dropZone.classList.remove('drag-over');
+
+        // Check for files first
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (['docx', 'txt', 'md', 'rtf', 'html', 'htm'].includes(ext)) {
+                await handleFileImport(file);
+                return;
+            }
+        }
+
+        // Check for HTML content (Google Docs drag, rich text paste)
+        const html = e.dataTransfer.getData('text/html');
+        if (html && html.length > 20) {
+            const parsed = parseHtmlContent(html);
+            if (parsed.trim()) {
+                const content = $('#script-content');
+                content.value = parsed;
+                state.currentScriptId = null;
+                $('#script-title').value = 'Imported Content';
+                $('#format-indicator').innerHTML = '<span class="format-badge">Imported: Google Docs / HTML</span>';
+                updateEditorStats();
+                return;
+            }
+        }
+
+        // Fallback: plain text
+        const text = e.dataTransfer.getData('text/plain');
+        if (text) {
+            const content = $('#script-content');
+            content.value = text;
+            state.currentScriptId = null;
+            $('#script-title').value = 'Imported Content';
+            $('#format-indicator').innerHTML = '<span class="format-badge">Imported: Text</span>';
+            updateEditorStats();
+        }
+    });
+
+    // Also handle paste with HTML (Ctrl+V from Google Docs)
+    $('#script-content').addEventListener('paste', (e) => {
+        const html = e.clipboardData.getData('text/html');
+        if (html && html.length > 100) {
+            // Check if it looks like it has headings
+            if (/<h[1-6]/i.test(html)) {
+                e.preventDefault();
+                const parsed = parseHtmlContent(html);
+                const content = $('#script-content');
+                // Insert at cursor or replace all if empty
+                if (!content.value.trim()) {
+                    content.value = parsed;
+                    $('#format-indicator').innerHTML = '<span class="format-badge">Pasted: Rich Text</span>';
+                } else {
+                    const start = content.selectionStart;
+                    const before = content.value.substring(0, start);
+                    const after = content.value.substring(content.selectionEnd);
+                    content.value = before + parsed + after;
+                }
+                updateEditorStats();
+            }
+        }
+    });
+}
+
+// ── PROMPTER ENGINE ───────────────────────────────────────────
+function loadIntoPrompter(text) {
+    state.rawText = text;
+    const wrapper = $('#prompter-text-wrapper');
+
+    if (!text.trim()) {
+        wrapper.innerHTML = '<div class="prompter-placeholder">Load a script from the editor to begin</div>';
+        state.prompterLines = [];
+        state.prompterSections = [];
+        return;
+    }
+
+    const rawLines = text.split('\n');
+    state.prompterLines = [];
+    state.prompterSections = [];
+
+    let lineIdx = 0;
+    rawLines.forEach(raw => {
+        const trimmed = raw.trim();
+        if (trimmed.startsWith('## ')) {
+            const sectionName = trimmed.replace(/^## /, '');
+            state.prompterSections.push({ name: sectionName, lineIndex: lineIdx });
+            state.prompterLines.push({ type: 'section', text: sectionName });
+        } else if (trimmed === '') {
+            state.prompterLines.push({ type: 'blank', text: '' });
+        } else {
+            state.prompterLines.push({ type: 'text', text: trimmed });
+        }
+        lineIdx++;
+    });
+
+    wrapper.innerHTML = state.prompterLines.map((line, i) => {
+        if (line.type === 'section') {
+            return `<div class="prompter-line section-marker" data-line="${i}">${escHtml(line.text)}</div>`;
+        } else if (line.type === 'blank') {
+            return `<div class="prompter-line" data-line="${i}" style="height:0.5em;"></div>`;
+        } else {
+            return `<div class="prompter-line" data-line="${i}">${escHtml(line.text)}</div>`;
+        }
+    }).join('');
+
+    // Apply font size
+    wrapper.querySelectorAll('.prompter-line:not(.section-marker)').forEach(el => {
+        el.style.fontSize = state.fontSize + 'px';
+    });
+
+    // Build section jump panel
+    renderSectionPanel();
+
+    // Reset scroll
+    state.scrollY = 0;
+    wrapper.style.transform = `translateY(0px)`;
+    updateProgress();
+
+    // Update remaining time
+    const words = text.trim().split(/\s+/).length;
+    const mins = Math.floor(words / 150);
+    const secs = Math.round((words / 150 - mins) * 60);
+    $('#info-remaining').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function renderSectionPanel() {
+    const panel = $('#section-jump-panel');
+    if (state.prompterSections.length === 0) {
+        panel.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:13px;">No sections found</div>';
+        return;
+    }
+    panel.innerHTML = state.prompterSections.map((s, i) =>
+        `<div class="section-jump-item" data-index="${i}">${escHtml(s.name)}</div>`
+    ).join('');
+
+    panel.querySelectorAll('.section-jump-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const idx = parseInt(item.dataset.index);
+            jumpToSection(idx);
+        });
+    });
+}
+
+function jumpToSection(sectionIdx) {
+    const section = state.prompterSections[sectionIdx];
+    if (!section) return;
+    const lineEl = $(`[data-line="${section.lineIndex}"]`);
+    if (!lineEl) return;
+
+    const viewport = $('#prompter-viewport');
+    const focusY = viewport.clientHeight * 0.35;
+    state.scrollY = -(lineEl.offsetTop - focusY);
+    updatePrompterPosition();
+    updateProgress();
+}
+
+function updatePrompterPosition() {
+    const wrapper = $('#prompter-text-wrapper');
+    let tx = '-50%';
+    if (state.mirror) {
+        wrapper.style.transform = `translateX(-50%) scaleX(-1) translateY(${state.scrollY}px)`;
+    } else {
+        wrapper.style.transform = `translateX(-50%) translateY(${state.scrollY}px)`;
+    }
+}
+
+function updateProgress() {
+    const wrapper = $('#prompter-text-wrapper');
+    const viewport = $('#prompter-viewport');
+    const maxScroll = wrapper.scrollHeight - viewport.clientHeight * 0.35;
+    const progress = maxScroll > 0 ? Math.min(100, Math.max(0, (-state.scrollY / maxScroll) * 100)) : 0;
+    $('#progress-bar').style.width = progress + '%';
+}
+
+// Animation loop
+function animate(timestamp) {
+    if (!state.isPlaying) return;
+
+    if (state.lastTimestamp === null) state.lastTimestamp = timestamp;
+    const dt = timestamp - state.lastTimestamp;
+    state.lastTimestamp = timestamp;
+
+    const speed = state.speed / 10;
+    state.scrollY -= speed * (dt / 16.67);
+
+    const wrapper = $('#prompter-text-wrapper');
+    const maxScroll = -(wrapper.scrollHeight);
+    if (state.scrollY < maxScroll) {
+        state.scrollY = maxScroll;
+        stopPlaying();
+        endSession();
+        return;
+    }
+
+    updatePrompterPosition();
+    updateProgress();
+    state.animFrameId = requestAnimationFrame(animate);
+}
+
+function startPlaying() {
+    state.isPlaying = true;
+    state.lastTimestamp = null;
+    $('#btn-play-pause').textContent = 'Pause';
+    $('#btn-play-pause').classList.remove('btn-blue');
+    $('#btn-play-pause').classList.add('btn-gold');
+    state.animFrameId = requestAnimationFrame(animate);
+
+    if (!state.sessionActive) startSession();
+}
+
+function stopPlaying() {
+    state.isPlaying = false;
+    if (state.animFrameId) cancelAnimationFrame(state.animFrameId);
+    state.animFrameId = null;
+    $('#btn-play-pause').textContent = 'Play';
+    $('#btn-play-pause').classList.remove('btn-gold');
+    $('#btn-play-pause').classList.add('btn-blue');
+}
+
+function togglePlay() {
+    if (state.isPlaying) stopPlaying();
+    else startPlaying();
+}
+
+function resetPrompter() {
+    stopPlaying();
+    state.scrollY = 0;
+    updatePrompterPosition();
+    updateProgress();
+    endSession();
+}
+
+// ── COUNTDOWN ─────────────────────────────────────────────────
+function startCountdown() {
+    const overlay = $('#countdown-overlay');
+    const numEl = $('#countdown-number');
+    overlay.classList.add('active');
+
+    let count = state.countdownDuration;
+    numEl.textContent = count;
+
+    // Audio cue via Web Audio
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(freq, dur) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        gain.gain.value = 0.15;
+        osc.start(); osc.stop(audioCtx.currentTime + dur);
+    }
+    beep(440, 0.1);
+
+    const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            numEl.textContent = count;
+            numEl.style.animation = 'none';
+            void numEl.offsetWidth;
+            numEl.style.animation = 'countdown-pop 0.5s ease';
+            beep(440, 0.1);
+        } else if (count === 0) {
+            numEl.textContent = 'GO';
+            numEl.style.animation = 'none';
+            void numEl.offsetWidth;
+            numEl.style.animation = 'countdown-pop 0.5s ease';
+            beep(880, 0.2);
+        } else {
+            clearInterval(interval);
+            overlay.classList.remove('active');
+            startPlaying();
+        }
+    }, 1000);
+}
+
+// ── SESSION TRACKING ──────────────────────────────────────────
+let sessionTimer = null;
+
+function startSession() {
+    state.sessionActive = true;
+    state.sessionStartTime = Date.now();
+    state.sessionElapsed = 0;
+    state.wpmSamples = [];
+    state.wordsSpoken = 0;
+    state.deviationCount = 0;
+
+    sessionTimer = setInterval(() => {
+        state.sessionElapsed = Math.floor((Date.now() - state.sessionStartTime) / 1000);
+        const m = Math.floor(state.sessionElapsed / 60);
+        const s = state.sessionElapsed % 60;
+        $('#info-elapsed').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+
+        // Estimate WPM based on scroll progress
+        const totalWords = state.rawText.trim() ? state.rawText.trim().split(/\s+/).length : 0;
+        const wrapper = $('#prompter-text-wrapper');
+        const viewport = $('#prompter-viewport');
+        const maxScroll = wrapper.scrollHeight - viewport.clientHeight * 0.35;
+        const progress = maxScroll > 0 ? Math.max(0, -state.scrollY / maxScroll) : 0;
+        const wordsRead = Math.round(totalWords * progress);
+        const minutesElapsed = state.sessionElapsed / 60;
+        const wpm = minutesElapsed > 0.1 ? Math.round(wordsRead / minutesElapsed) : 0;
+
+        $('#info-wpm').textContent = wpm || '--';
+        if (wpm > 0) state.wpmSamples.push({ time: state.sessionElapsed, wpm });
+
+        // Update remaining
+        const wordsLeft = totalWords - wordsRead;
+        const remainMin = wpm > 0 ? Math.floor(wordsLeft / wpm) : 0;
+        const remainSec = wpm > 0 ? Math.round(((wordsLeft / wpm) - remainMin) * 60) : 0;
+        if (wpm > 0) {
+            $('#info-remaining').textContent = `${remainMin}:${remainSec.toString().padStart(2, '0')}`;
+        }
+    }, 1000);
+}
+
+function endSession() {
+    if (!state.sessionActive) return;
+    state.sessionActive = false;
+    if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
+    stopVoice();
+    stopRecording();
+}
+
+// ── VOICE TRACKING ────────────────────────────────────────────
+function initVoice() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        $('#ctrl-voice').disabled = true;
+        $('#voice-status').textContent = 'Not supported';
+        return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    state.voiceRecognition = new SpeechRecognition();
+    state.voiceRecognition.continuous = true;
+    state.voiceRecognition.interimResults = true;
+    state.voiceRecognition.lang = 'en-US';
+
+    state.voiceRecognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
+        state.voiceTranscript = transcript.toLowerCase().trim();
+        processVoiceTracking();
+    };
+
+    state.voiceRecognition.onend = () => {
+        if (state.voiceEnabled) {
+            try { state.voiceRecognition.start(); } catch(e) {}
+        }
+    };
+
+    state.voiceRecognition.onerror = (e) => {
+        if (e.error === 'no-speech' || e.error === 'aborted') return;
+        console.warn('Voice error:', e.error);
+    };
+}
+
+function startVoice() {
+    if (!state.voiceRecognition) return;
+    state.voiceEnabled = true;
+    try { state.voiceRecognition.start(); } catch(e) {}
+    $('#voice-dot').classList.add('active');
+    $('#voice-status').textContent = 'Listening';
+    state.lastMatchIndex = 0;
+}
+
+function stopVoice() {
+    if (!state.voiceRecognition) return;
+    state.voiceEnabled = false;
+    try { state.voiceRecognition.stop(); } catch(e) {}
+    $('#voice-dot').classList.remove('active');
+    $('#voice-status').textContent = 'Voice off';
+}
+
+function processVoiceTracking() {
+    if (!state.voiceTranscript || !state.rawText) return;
+
+    const scriptWords = state.rawText.toLowerCase().replace(/## .+/gm, '').split(/\s+/).filter(Boolean);
+    const spokenWords = state.voiceTranscript.split(/\s+/).filter(Boolean);
+
+    if (spokenWords.length === 0) return;
+
+    // Find where the spoken words match in the script
+    const lastFew = spokenWords.slice(-5);
+    let bestMatch = -1;
+    let bestScore = 0;
+
+    for (let i = Math.max(0, state.lastMatchIndex - 20); i < scriptWords.length - lastFew.length + 1; i++) {
+        let score = 0;
+        for (let j = 0; j < lastFew.length; j++) {
+            if (scriptWords[i + j] && lastFew[j] &&
+                (scriptWords[i + j] === lastFew[j] ||
+                 scriptWords[i + j].includes(lastFew[j]) ||
+                 lastFew[j].includes(scriptWords[i + j]))) {
+                score++;
+            }
+        }
+        if (score > bestScore) {
+            bestScore = score;
+            bestMatch = i;
+        }
+    }
+
+    // Update deviation indicator
+    const badge = $('#deviation-badge');
+    if (bestScore >= 3) {
+        badge.textContent = 'On Script';
+        badge.className = 'deviation-badge';
+        state.lastMatchIndex = bestMatch;
+
+        // Auto-scroll to match position if voice tracking
+        if (state.voiceEnabled && state.isPlaying) {
+            const progress = bestMatch / scriptWords.length;
+            const wrapper = $('#prompter-text-wrapper');
+            const viewport = $('#prompter-viewport');
+            const totalHeight = wrapper.scrollHeight;
+            const targetY = -(totalHeight * progress) + viewport.clientHeight * 0.35;
+
+            // Smooth blend toward voice position
+            const diff = targetY - state.scrollY;
+            if (Math.abs(diff) > 100) {
+                state.scrollY += diff * 0.1;
+            }
+        }
+    } else if (bestScore >= 1) {
+        badge.textContent = 'Drifting';
+        badge.className = 'deviation-badge warning';
+    } else {
+        badge.textContent = 'Off Script';
+        badge.className = 'deviation-badge off-script';
+        state.deviationCount++;
+    }
+}
+
+// ── AUDIO RECORDING ───────────────────────────────────────────
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        state.mediaRecorder = new MediaRecorder(stream);
+        state.audioChunks = [];
+        state.mediaRecorder.ondataavailable = (e) => state.audioChunks.push(e.data);
+        state.mediaRecorder.onstop = () => {
+            const blob = new Blob(state.audioChunks, { type: 'audio/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vaic-session-${new Date().toISOString().slice(0,10)}.webm`;
+            a.click();
+        };
+        state.mediaRecorder.start();
+        state.isRecording = true;
+        state.recStartTime = Date.now();
+        $('#btn-record').textContent = 'Stop Rec';
+        $('#btn-record').classList.add('btn-danger');
+        $('#btn-record').classList.remove('btn-ghost');
+        $('#recording-indicator').style.display = 'flex';
+
+        // Update rec timer
+        const recTimer = setInterval(() => {
+            if (!state.isRecording) { clearInterval(recTimer); return; }
+            const elapsed = Math.floor((Date.now() - state.recStartTime) / 1000);
+            const m = Math.floor(elapsed / 60);
+            const s = elapsed % 60;
+            $('#rec-time').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+        }, 1000);
+    } catch (e) {
+        alert('Microphone access is required for recording.');
+    }
+}
+
+function stopRecording() {
+    if (!state.isRecording) return;
+    state.isRecording = false;
+    if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {
+        state.mediaRecorder.stop();
+        state.mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    }
+    $('#btn-record').textContent = 'Record';
+    $('#btn-record').classList.remove('btn-danger');
+    $('#btn-record').classList.add('btn-ghost');
+    $('#recording-indicator').style.display = 'none';
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────
+function renderAnalytics() {
+    if (state.wpmSamples.length < 3) {
+        $('#no-analytics').style.display = 'block';
+        $('#analytics-content').style.display = 'none';
+        return;
+    }
+
+    $('#no-analytics').style.display = 'none';
+    $('#analytics-content').style.display = 'block';
+
+    const duration = state.sessionElapsed;
+    const mins = (duration / 60).toFixed(1);
+    const avgWpm = Math.round(state.wpmSamples.reduce((s, v) => s + v.wpm, 0) / state.wpmSamples.length);
+    const totalWords = state.rawText.trim() ? state.rawText.trim().split(/\s+/).length : 0;
+
+    $('#a-duration').textContent = mins;
+    $('#a-wpm').textContent = avgWpm;
+    $('#a-words').textContent = totalWords;
+    $('#a-deviations').textContent = state.deviationCount;
+
+    // Draw WPM chart
+    drawWpmChart();
+
+    // Generate coaching tips
+    generateCoachingTips(avgWpm);
+}
+
+function drawWpmChart() {
+    const canvas = $('#wpm-chart');
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width - 40;
+    canvas.height = 200;
+
+    const samples = state.wpmSamples;
+    if (samples.length < 2) return;
+
+    const maxWpm = Math.max(...samples.map(s => s.wpm), state.targetWpm + 20);
+    const minWpm = Math.min(...samples.map(s => s.wpm)) - 10;
+    const maxTime = samples[samples.length - 1].time;
+
+    const pad = { top: 20, right: 20, bottom: 30, left: 50 };
+    const w = canvas.width - pad.left - pad.right;
+    const h = canvas.height - pad.top - pad.bottom;
+
+    // Clear
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(45, 95, 138, 0.2)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (h / 4) * i;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + w, y); ctx.stroke();
+        const val = Math.round(maxWpm - (maxWpm - minWpm) * (i / 4));
+        ctx.fillStyle = '#556677';
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'right';
+        ctx.fillText(val, pad.left - 8, y + 4);
+    }
+
+    // Target WPM line
+    const targetY = pad.top + h * (1 - (state.targetWpm - minWpm) / (maxWpm - minWpm));
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(201, 162, 39, 0.5)';
+    ctx.beginPath(); ctx.moveTo(pad.left, targetY); ctx.lineTo(pad.left + w, targetY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#c9a227';
+    ctx.textAlign = 'left';
+    ctx.fillText('Target', pad.left + w - 40, targetY - 6);
+
+    // WPM line
+    ctx.strokeStyle = '#5ba3ec';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    samples.forEach((s, i) => {
+        const x = pad.left + (s.time / maxTime) * w;
+        const y = pad.top + h * (1 - (s.wpm - minWpm) / (maxWpm - minWpm));
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Fill under
+    ctx.lineTo(pad.left + w, pad.top + h);
+    ctx.lineTo(pad.left, pad.top + h);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(91, 163, 236, 0.08)';
+    ctx.fill();
+
+    // X axis labels
+    ctx.fillStyle = '#556677';
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= 4; i++) {
+        const t = Math.round((maxTime / 4) * i);
+        const m = Math.floor(t / 60);
+        const s = t % 60;
+        ctx.fillText(`${m}:${s.toString().padStart(2, '0')}`, pad.left + (w / 4) * i, canvas.height - 8);
+    }
+}
+
+function generateCoachingTips(avgWpm) {
+    const tips = [];
+    const target = state.targetWpm;
+
+    if (avgWpm < target - 20) {
+        tips.push(`Your average pace of ${avgWpm} WPM is below your target of ${target}. Try increasing your reading speed slightly — you have room to pick up the pace without losing clarity.`);
+    } else if (avgWpm > target + 20) {
+        tips.push(`You averaged ${avgWpm} WPM, which is above your ${target} target. Consider slowing down to let key points land with your audience.`);
+    } else {
+        tips.push(`Your pace of ${avgWpm} WPM is right in the sweet spot around your ${target} target. Well calibrated.`);
+    }
+
+    if (state.wpmSamples.length > 10) {
+        const firstHalf = state.wpmSamples.slice(0, Math.floor(state.wpmSamples.length / 2));
+        const secondHalf = state.wpmSamples.slice(Math.floor(state.wpmSamples.length / 2));
+        const avgFirst = Math.round(firstHalf.reduce((s, v) => s + v.wpm, 0) / firstHalf.length);
+        const avgSecond = Math.round(secondHalf.reduce((s, v) => s + v.wpm, 0) / secondHalf.length);
+        const diff = avgSecond - avgFirst;
+
+        if (diff > 15) {
+            tips.push(`You sped up by about ${diff} WPM in the second half. This is common — speakers often rush toward the end. Practice maintaining consistent pacing through your conclusion.`);
+        } else if (diff < -15) {
+            tips.push(`Your pace dropped ${Math.abs(diff)} WPM in the second half. This could indicate fatigue or loss of energy. Try building energy toward your closing statements.`);
+        }
+    }
+
+    if (state.deviationCount > 5) {
+        tips.push(`You went off-script ${state.deviationCount} times. If these were intentional (audience engagement, ad-libbing), that's fine. If not, more rehearsal time with this script would help.`);
+    } else if (state.deviationCount <= 2) {
+        tips.push(`Excellent script adherence — you stayed on track throughout. This shows strong preparation.`);
+    }
+
+    // WPM variance
+    if (state.wpmSamples.length > 5) {
+        const mean = avgWpm;
+        const variance = state.wpmSamples.reduce((s, v) => s + Math.pow(v.wpm - mean, 2), 0) / state.wpmSamples.length;
+        const stdDev = Math.sqrt(variance);
+        if (stdDev > 25) {
+            tips.push(`Your pacing varied quite a bit (±${Math.round(stdDev)} WPM). Consistent pacing helps audiences follow along. Try using the focus line to maintain steady rhythm.`);
+        }
+    }
+
+    $('#coaching-tips').innerHTML = tips.map(t => `<div class="coaching-tip">${t}</div>`).join('');
+}
+
+// ── PROMPTER CONTROLS INIT ────────────────────────────────────
+function initPrompterControls() {
+    $('#btn-play-pause').addEventListener('click', togglePlay);
+    $('#btn-reset').addEventListener('click', resetPrompter);
+    $('#btn-countdown-start').addEventListener('click', startCountdown);
+
+    // Speed
+    $('#ctrl-speed').addEventListener('input', (e) => {
+        state.speed = parseInt(e.target.value);
+        $('#speed-display').textContent = state.speed;
+    });
+
+    // Font size
+    $('#ctrl-fontsize').addEventListener('input', (e) => {
+        state.fontSize = parseInt(e.target.value) || 48;
+        $$('.prompter-line:not(.section-marker)').forEach(el => {
+            el.style.fontSize = state.fontSize + 'px';
+        });
+    });
+
+    // Mirror
+    $('#ctrl-mirror').addEventListener('change', (e) => {
+        state.mirror = e.target.checked;
+        updatePrompterPosition();
+    });
+
+    // Voice toggle
+    $('#ctrl-voice').addEventListener('change', (e) => {
+        if (e.target.checked) startVoice();
+        else stopVoice();
+    });
+
+    // Section panel toggle
+    $('#btn-sections-toggle').addEventListener('click', () => {
+        $('#section-jump-panel').classList.toggle('visible');
+    });
+
+    // Record
+    $('#btn-record').addEventListener('click', () => {
+        if (state.isRecording) stopRecording();
+        else startRecording();
+    });
+
+    // Fullscreen
+    $('#btn-fullscreen').addEventListener('click', toggleFullscreen);
+
+    // Shortcuts
+    $('#btn-shortcuts').addEventListener('click', () => {
+        $('#shortcuts-overlay').classList.toggle('visible');
+    });
+
+    // Click prompter to toggle play
+    $('#prompter-viewport').addEventListener('click', (e) => {
+        if (e.target.closest('.section-jump-panel')) return;
+        togglePlay();
+    });
+
+    // Focus line setting
+    $('#set-focus-line').addEventListener('change', (e) => {
+        state.focusLineEnabled = e.target.checked;
+        $('#focus-line').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // Progress bar setting
+    $('#set-progress-bar').addEventListener('change', (e) => {
+        $('.prompter-progress').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // Settings
+    $('#set-default-speed').addEventListener('change', (e) => {
+        const val = parseInt(e.target.value) || 30;
+        state.speed = val;
+        $('#ctrl-speed').value = val;
+        $('#speed-display').textContent = val;
+    });
+    $('#set-default-fontsize').addEventListener('change', (e) => {
+        state.fontSize = parseInt(e.target.value) || 48;
+        $('#ctrl-fontsize').value = state.fontSize;
+    });
+    $('#set-countdown').addEventListener('change', (e) => {
+        state.countdownDuration = parseInt(e.target.value) || 3;
+    });
+    $('#set-target-wpm').addEventListener('change', (e) => {
+        state.targetWpm = parseInt(e.target.value) || 150;
+    });
+
+    // Clear library
+    $('#btn-clear-library').addEventListener('click', async () => {
+        if (!confirm('Delete all saved scripts? This cannot be undone.')) return;
+        await dbClearAll();
+        state.scripts = [];
+        state.currentScriptId = null;
+        renderScriptList();
+    });
+
+    // Export report
+    $('#btn-export-report').addEventListener('click', exportReport);
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+            document.body.classList.add('prompter-fullscreen');
+            $('#btn-fullscreen').textContent = 'Exit FS';
+        });
+    } else {
+        document.exitFullscreen().then(() => {
+            document.body.classList.remove('prompter-fullscreen');
+            $('#btn-fullscreen').textContent = 'Fullscreen';
+        });
+    }
+}
+
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+        document.body.classList.remove('prompter-fullscreen');
+        $('#btn-fullscreen').textContent = 'Fullscreen';
+    }
+});
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────────────
+function initKeyboard() {
+    document.addEventListener('keydown', (e) => {
+        // Don't fire shortcuts when typing in inputs
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+        switch(e.key) {
+            case ' ':
+                e.preventDefault();
+                if ($('#page-prompter').classList.contains('active')) togglePlay();
+                break;
+            case 'r': case 'R':
+                if (!e.ctrlKey && !e.metaKey) resetPrompter();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                state.speed = Math.min(100, state.speed + 5);
+                $('#ctrl-speed').value = state.speed;
+                $('#speed-display').textContent = state.speed;
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                state.speed = Math.max(1, state.speed - 5);
+                $('#ctrl-speed').value = state.speed;
+                $('#speed-display').textContent = state.speed;
+                break;
+            case '+': case '=':
+                state.fontSize = Math.min(120, state.fontSize + 4);
+                $('#ctrl-fontsize').value = state.fontSize;
+                $$('.prompter-line:not(.section-marker)').forEach(el => el.style.fontSize = state.fontSize + 'px');
+                break;
+            case '-': case '_':
+                state.fontSize = Math.max(20, state.fontSize - 4);
+                $('#ctrl-fontsize').value = state.fontSize;
+                $$('.prompter-line:not(.section-marker)').forEach(el => el.style.fontSize = state.fontSize + 'px');
+                break;
+            case 'm': case 'M':
+                state.mirror = !state.mirror;
+                $('#ctrl-mirror').checked = state.mirror;
+                updatePrompterPosition();
+                break;
+            case 'f': case 'F':
+                toggleFullscreen();
+                break;
+            case 'v': case 'V':
+                const vc = $('#ctrl-voice');
+                vc.checked = !vc.checked;
+                vc.dispatchEvent(new Event('change'));
+                break;
+            case 's': case 'S':
+                $('#section-jump-panel').classList.toggle('visible');
+                break;
+            case 'c': case 'C':
+                if ($('#page-prompter').classList.contains('active')) startCountdown();
+                break;
+            case '?':
+                $('#shortcuts-overlay').classList.toggle('visible');
+                break;
+        }
+
+        // Ctrl+R for recording
+        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            e.preventDefault();
+            if (state.isRecording) stopRecording();
+            else startRecording();
+        }
+    });
+}
+
+// ── EXPORT REPORT ─────────────────────────────────────────────
+function exportReport() {
+    if (state.wpmSamples.length < 3) {
+        alert('No session data to export. Complete a prompter session first.');
+        return;
+    }
+
+    const avgWpm = Math.round(state.wpmSamples.reduce((s, v) => s + v.wpm, 0) / state.wpmSamples.length);
+    const duration = (state.sessionElapsed / 60).toFixed(1);
+    const date = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    const report = `
+VAIC PROMPTFLOW — SESSION REPORT
+================================
+Voss AI Consulting | www.vossaiconsulting.com
+Generated: ${date}
+
+SESSION SUMMARY
+───────────────
+Duration:       ${duration} minutes
+Average WPM:    ${avgWpm}
+Target WPM:     ${state.targetWpm}
+Deviations:     ${state.deviationCount}
+Total Words:    ${state.rawText.trim() ? state.rawText.trim().split(/\\s+/).length : 0}
+
+WPM OVER TIME
+─────────────
+${state.wpmSamples.filter((_, i) => i % 5 === 0).map(s => {
+    const m = Math.floor(s.time / 60);
+    const sec = s.time % 60;
+    return `${m}:${sec.toString().padStart(2, '0')}  →  ${s.wpm} WPM`;
+}).join('\n')}
+
+COACHING NOTES
+──────────────
+${avgWpm < state.targetWpm - 20 ? '• Consider increasing pace slightly to match your target.' : avgWpm > state.targetWpm + 20 ? '• Consider slowing down for better audience comprehension.' : '• Your pacing is well-calibrated to your target.'}
+${state.deviationCount > 5 ? '• Multiple off-script moments detected. Additional rehearsal recommended.' : '• Strong script adherence throughout the session.'}
+
+─────────────────────────────────
+Powered by VAIC PromptFlow
+Voss AI Consulting
+    `.trim();
+
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vaic-session-report-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ── MULTI-WINDOW CONTROL (BroadcastChannel) ───────────────────
+let controlChannel = null;
+
+function initMultiWindow() {
+    if (!('BroadcastChannel' in window)) return;
+    controlChannel = new BroadcastChannel('vaic-promptflow');
+
+    controlChannel.onmessage = (e) => {
+        const { action, value } = e.data;
+        switch (action) {
+            case 'play': startPlaying(); break;
+            case 'pause': stopPlaying(); break;
+            case 'toggle': togglePlay(); break;
+            case 'reset': resetPrompter(); break;
+            case 'speed': state.speed = value; $('#ctrl-speed').value = value; $('#speed-display').textContent = value; break;
+            case 'fontSize': state.fontSize = value; $('#ctrl-fontsize').value = value;
+                $$('.prompter-line:not(.section-marker)').forEach(el => el.style.fontSize = value + 'px');
+                break;
+        }
+    };
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+async function init() {
+    initSplash();
+    initNav();
+
+    await openDB();
+    await loadScripts();
+    renderScriptList();
+
+    initEditor();
+    initDragDrop();
+    initPrompterControls();
+    initVoice();
+    initKeyboard();
+    initMultiWindow();
+
+    updateEditorStats();
+}
+
+init();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(r => console.log('SW registered:', r.scope))
+      .catch(e => console.log('SW failed:', e));
+  });
+}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const footer = document.querySelector('.sidebar-footer');
+  if (footer && !document.querySelector('.install-btn')) {
+    const btn = document.createElement('button');
+    btn.className = 'install-btn';
+    btn.textContent = '\u2B07 Install App';
+    btn.style.cssText = 'display:block;width:100%;margin-top:8px;padding:8px;border:1px solid rgba(201,162,39,.3);border-radius:8px;background:rgba(201,162,39,.08);color:#e8c84a;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-main);transition:all .2s';
+    btn.onmouseover = () => btn.style.background = 'rgba(201,162,39,.15)';
+    btn.onmouseout = () => btn.style.background = 'rgba(201,162,39,.08)';
+    btn.onclick = async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        if (result.outcome === 'accepted') btn.remove();
+        deferredPrompt = null;
+      }
+    };
+    footer.appendChild(btn);
+  }
+});
+</script>
+</body>
+</html>
